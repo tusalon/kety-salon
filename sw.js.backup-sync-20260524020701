@@ -1,6 +1,6 @@
 // sw.js - Service Worker para Ketyca\'s Salón
 
-const CACHE_NAME = 'ketycasalon-v29';
+const CACHE_NAME = 'ketycasalon-v25';
 const urlsToCache = [
   '/ketycasalon/',
   '/ketycasalon/index.html',
