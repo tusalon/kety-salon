@@ -1,6 +1,6 @@
 // sw.js - Service Worker para Ketyca\'s Salón
 
-const CACHE_NAME = 'ketycasalon-v29';
+const CACHE_NAME = 'ketycasalon-v49';
 const urlsToCache = [
   '/ketycasalon/',
   '/ketycasalon/index.html',
@@ -17,7 +17,16 @@ const urlsToCache = [
   '/ketycasalon/icons/icon-152x152.png',
   '/ketycasalon/icons/icon-192x192.png',
   '/ketycasalon/icons/icon-384x384.png',
-  '/ketycasalon/icons/icon-512x512.png'
+  '/ketycasalon/icons/icon-512x512.png',
+  '/ketycasalon/vendor/react.production.min.js',
+  '/ketycasalon/vendor/react-dom.production.min.js',
+  '/ketycasalon/vendor/babel.min.js',
+  '/ketycasalon/vendor/bcrypt.min.js',
+  '/ketycasalon/vendor/tailwind-browser.js',
+  '/ketycasalon/vendor/lucide/lucide.css',
+  '/ketycasalon/vendor/lucide/lucide.woff2',
+  '/ketycasalon/utils/push-config.js',
+  '/ketycasalon/utils/push-notifications.js'
 ];
 
 // ============================================
@@ -137,6 +146,51 @@ self.addEventListener('message', event => {
       });
     });
   }
+});
+
+// ============================================
+// WEB PUSH OPCIONAL
+// ============================================
+self.addEventListener('push', event => {
+  let payload = {};
+
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (error) {
+    payload = {
+      title: 'RservasRoma',
+      body: event.data ? event.data.text() : 'Tienes una nueva notificación'
+    };
+  }
+
+  const title = payload.title || 'RservasRoma';
+  const options = {
+    body: payload.body || 'Tienes una nueva notificación',
+    icon: '/ketycasalon/icons/icon-192x192.png',
+    badge: '/ketycasalon/icons/icon-96x96.png',
+    tag: payload.tag || 'rservasroma',
+    data: {
+      url: payload.url || '/ketycasalon/admin.html',
+      ...(payload.data || {})
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const targetUrl = event.notification?.data?.url || '/ketycasalon/admin.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+      return null;
+    })
+  );
 });
 
 console.log('✅ Service Worker configurado para Ketyca\'s Salón');
